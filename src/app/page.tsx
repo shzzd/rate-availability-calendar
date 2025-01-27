@@ -165,17 +165,15 @@ export default function Page() {
     ).format("YYYY-MM-DD"),
   });
   console.log(room_calendar?.data)
-  console.log(room_calendar?.data?.pages.map(e => e.data))
-  console.log(room_calendar?.hasNextPage)
 
+  // take ref and inview to check if scrolls down at bottom
   const { ref: loadMoreRef, inView } = useInView({
-    threshold: 1.0,
-    triggerOnce: false,
+    threshold: 1,
   });
   
   useEffect(() => {
     if (inView && room_calendar.hasNextPage) {
-      room_calendar.fetchNextPage();
+      room_calendar.fetchNextPage(); // if there is next page then fetch the next page
     }
   }, [inView, room_calendar.hasNextPage, room_calendar.fetchNextPage]);
 

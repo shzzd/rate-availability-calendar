@@ -75,14 +75,14 @@ export default function useRoomRateAvailabilityCalendar(params: IParams) {
     })
   }
 
-  // Use React Query's useQuery hook to fetch data
+  // Use React Query's useInfiniteQuery hook to fetch data
   return useInfiniteQuery({
     queryKey: ["property_room_calendar", params], // Unique query key
     queryFn: fetchData,
     initialPageParam: 0,
-    getNextPageParam: (lastpage, allpages) => {
-      console.log("lastpage", lastpage, allpages)
-      if(lastpage.data.nextCursor){
+    getNextPageParam: (lastpage) => {
+      // Check if there is a next cursor to get next page data upto 9
+      if(lastpage.data.nextCursor && lastpage.data.nextCursor !== 10){
         return lastpage.data.nextCursor
       }
       else{
