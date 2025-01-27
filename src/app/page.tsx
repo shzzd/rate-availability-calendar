@@ -1,5 +1,5 @@
 "use client";
-
+import { useInView } from "react-intersection-observer";
 // Import necessary modules and components
 import {
   Grid2 as Grid,
@@ -164,6 +164,20 @@ export default function Page() {
       : watchedDateRange[0]!.add(2, "month")
     ).format("YYYY-MM-DD"),
   });
+  console.log(room_calendar?.data)
+  console.log(room_calendar?.data?.pages.map(e => e.data))
+  console.log(room_calendar?.hasNextPage)
+
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 1.0,
+    triggerOnce: false,
+  });
+  
+  useEffect(() => {
+    if (inView && room_calendar.hasNextPage) {
+      room_calendar.fetchNextPage();
+    }
+  }, [inView, room_calendar.hasNextPage, room_calendar.fetchNextPage]);
 
   // Component to render each month row in the calendar
   const MonthRow: React.FC<ListChildComponentProps> = memo(function MonthRowFC({
@@ -357,22 +371,41 @@ export default function Page() {
           </Grid>
 
           {room_calendar.isSuccess
-            ? room_calendar.data.data.room_categories.map(
-                (room_category, key) => (
-                  <RoomRateAvailabilityCalendar
-                    key={key}
-                    index={key}
-                    InventoryRefs={InventoryRefs}
-                    isLastElement={
-                      key === room_calendar.data.data.room_categories.length - 1
-                    }
-                    room_category={room_category}
-                    handleCalenderScroll={handleCalenderScroll}
-                  />
-                )
+            ? room_calendar.data?.pages.map((page, pageIndex)=> page.data.room_categories.map(
+              (room_category, key) => (
+                <RoomRateAvailabilityCalendar
+                  key={`${pageIndex}-${key}`}
+                  index={key}
+                  InventoryRefs={InventoryRefs}
+                  isLastElement={
+                    pageIndex === room_calendar.data.pages.length - 1 && key === page.data.room_categories.length - 1
+                  }
+                  room_category={room_category}
+                  handleCalenderScroll={handleCalenderScroll}
+                />
               )
+            ))
             : null}
-          {room_calendar.isLoading && (
+            <div ref={loadMoreRef}>{room_calendar.isLoading && room_calendar.isFetchingNextPage ? <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <CircularProgress />
+            </Box> : room_calendar.hasNextPage ? <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+            >
+              <CircularProgress />
+            </Box> : ''}</div>
+          {/* {room_calendar.isLoading && (
             <Box
               sx={{
                 display: "flex",
@@ -383,7 +416,7 @@ export default function Page() {
             >
               <CircularProgress />
             </Box>
-          )}
+          )} */}
         </Card>
       </Box>
       <Box
