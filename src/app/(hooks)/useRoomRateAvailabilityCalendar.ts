@@ -67,6 +67,7 @@ export default function useRoomRateAvailabilityCalendar(params: IParams) {
       start_date: params.start_date,
       end_date: params.end_date,
       cursor: pageParam.toString(), // for infinite scroll
+      fields: "id,name,rate", // Fetch only necessary fields
     }).toString();
 
     return await Fetch<IResponse>({
@@ -75,19 +76,20 @@ export default function useRoomRateAvailabilityCalendar(params: IParams) {
     })
   }
 
-  // Use React Query's useQuery hook to fetch data
+  // Use React Query's useInfiniteQuery hook to fetch data
   return useInfiniteQuery({
     queryKey: ["property_room_calendar", params], // Unique query key
     queryFn: fetchData,
     initialPageParam: 0,
-    getNextPageParam: (lastpage, allpages) => {
-      console.log("lastpage", lastpage, allpages)
+    getNextPageParam: (lastpage) => {
+      // Check if there is a next cursor to get next page data upto 9
       if(lastpage.data.nextCursor){
         return lastpage.data.nextCursor
       }
       else{
         undefined
       }
-    }
+    },
+    staleTime: 2 * 60 * 1000, // Keep data fresh for 2 minutes
   });
 }

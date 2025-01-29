@@ -1,5 +1,6 @@
 "use client";
 import { useInView } from "react-intersection-observer";
+import throttle from "lodash/throttle";
 // Import necessary modules and components
 import {
   Grid2 as Grid,
@@ -66,34 +67,108 @@ export default function Page() {
   const InventoryRefs = useRef<Array<RefObject<VariableSizeGrid>>>([]);
 
   // Handle horizontal scroll for dates
-  const handleDatesScroll = useCallback(({ scrollLeft }: GridOnScrollProps) => {
-    InventoryRefs.current.forEach((ref) => {
-      if (ref.current) {
-        ref.current.scrollTo({ scrollLeft });
-      }
-    });
-    if (calenderMonthsRef.current) {
-      calenderMonthsRef.current.scrollTo(scrollLeft);
-    }
-  }, []);
-
-  // Handle horizontal scroll for the entire calendar
-  const handleCalenderScroll = useCallback(
-    ({ scrollLeft }: GridOnScrollProps) => {
+  // const handleDatesScroll = useCallback(({ scrollLeft }: GridOnScrollProps) => {
+  //   InventoryRefs.current.forEach((ref) => {
+  //     if (ref.current) {
+  //       ref.current.scrollTo({ scrollLeft });
+  //     }
+  //   });
+  //   if (calenderMonthsRef.current) {
+  //     calenderMonthsRef.current.scrollTo(scrollLeft);
+  //   }
+  // }, []);
+  const handleDatesScroll = useCallback((params: GridOnScrollProps) => {
+    requestAnimationFrame(() => {
       InventoryRefs.current.forEach((ref) => {
         if (ref.current) {
-          ref.current.scrollTo({ scrollLeft });
+          ref.current.scrollTo({ scrollLeft: params.scrollLeft });
         }
       });
-      if (calenderMonthsRef.current) {
-        calenderMonthsRef.current.scrollTo(scrollLeft);
+    });
+  
+    if (calenderMonthsRef.current) {
+      calenderMonthsRef.current.scrollTo(params.scrollLeft);
+    }
+  }, []);
+  
+  useEffect(() => {
+    const onScroll = () => {
+      if (mainGridContainerRef.current) {
+        handleDatesScroll({
+          scrollLeft: mainGridContainerRef.current.scrollLeft || 0,
+          scrollTop: 0, // Default value since it's not used
+          horizontalScrollDirection: "forward", // Arbitrary value
+          verticalScrollDirection: "forward", // Arbitrary value
+          scrollUpdateWasRequested: false, // Assumes scroll is user-triggered
+        });
       }
-      if (calenderDatesRef.current) {
-        calenderDatesRef.current.scrollTo({ scrollLeft });
+    };
+    
+  
+    if (mainGridContainerRef.current) {
+      mainGridContainerRef.current.addEventListener("scroll", onScroll);
+    }
+    
+    return () => {
+      mainGridContainerRef.current?.removeEventListener("scroll", onScroll);
+    };
+  }, [handleDatesScroll]);
+
+  // Handle horizontal scroll for the entire calendar
+  // const handleCalenderScroll = useCallback(
+  //   ({ scrollLeft }: GridOnScrollProps) => {
+  //     InventoryRefs.current.forEach((ref) => {
+  //       if (ref.current) {
+  //         ref.current.scrollTo({ scrollLeft });
+  //       }
+  //     });
+  //     if (calenderMonthsRef.current) {
+  //       calenderMonthsRef.current.scrollTo(scrollLeft);
+  //     }
+  //     if (calenderDatesRef.current) {
+  //       calenderDatesRef.current.scrollTo({ scrollLeft });
+  //     }
+  //   },
+  //   []
+  // );
+  const handleCalenderScroll = useCallback((params: GridOnScrollProps) => {
+    requestAnimationFrame(() => {
+      InventoryRefs.current.forEach((ref) => {
+        if (ref.current) {
+          ref.current.scrollTo({ scrollLeft: params.scrollLeft });
+        }
+      });
+    });
+  
+    if (calenderMonthsRef.current) {
+      calenderMonthsRef.current.scrollTo(params.scrollLeft);
+    }
+    if (calenderDatesRef.current) {
+      calenderDatesRef.current.scrollTo({ scrollLeft: params.scrollLeft });
+    }
+  }, []);
+  
+  useEffect(() => {
+    const onScroll = () => {
+      if (mainGridContainerRef.current) {
+        handleCalenderScroll({
+          scrollLeft: mainGridContainerRef.current.scrollLeft || 0,
+          scrollTop: 0, // Default value since it's not used
+          horizontalScrollDirection: "forward", // Arbitrary value
+          verticalScrollDirection: "forward", // Arbitrary value
+          scrollUpdateWasRequested: false, // Assumes scroll is user-triggered
+        });
       }
-    },
-    []
-  );
+    };
+  
+    if (mainGridContainerRef.current) {
+      mainGridContainerRef.current.addEventListener("scroll", onScroll);
+    }
+    
+    return () => {
+      mainGridContainerRef.current?.removeEventListener("scroll", onScroll);
+    };
+  }, [handleCalenderScroll]);
 
   // Add event listener for wheel scroll to handle horizontal scrolling
   useEffect(() => {
@@ -165,19 +240,31 @@ export default function Page() {
     ).format("YYYY-MM-DD"),
   });
   console.log(room_calendar?.data)
-  console.log(room_calendar?.data?.pages.map(e => e.data))
-  console.log(room_calendar?.hasNextPage)
 
+  // take ref and inview to check if scrolls down at bottom
   const { ref: loadMoreRef, inView } = useInView({
-    threshold: 1.0,
-    triggerOnce: false,
+    threshold: 1,
   });
+
+  const handleFetchMore = useCallback(
+    throttle(() => {
+      // if there is next page then fetch the next page
+      if (room_calendar.hasNextPage) {
+        room_calendar.fetchNextPage();
+      }
+    }, 500),
+    [room_calendar.hasNextPage, room_calendar.fetchNextPage]
+  );
   
+  // useEffect(() => {
+  //   if (inView && room_calendar.hasNextPage) {
+  //     room_calendar.fetchNextPage(); // if there is next page then fetch the next page
+  //   }
+  // }, [inView, room_calendar.hasNextPage, room_calendar.fetchNextPage]);
+
   useEffect(() => {
-    if (inView && room_calendar.hasNextPage) {
-      room_calendar.fetchNextPage();
-    }
-  }, [inView, room_calendar.hasNextPage, room_calendar.fetchNextPage]);
+    if (inView) handleFetchMore();
+  }, [inView, handleFetchMore]);
 
   // Component to render each month row in the calendar
   const MonthRow: React.FC<ListChildComponentProps> = memo(function MonthRowFC({
@@ -395,7 +482,7 @@ export default function Page() {
               }}
             >
               <CircularProgress />
-            </Box> : room_calendar.hasNextPage ? <Box
+            </Box> : room_calendar.hasNextPage ? <><Box
               sx={{
                 display: "flex",
                 justifyContent: "center",
@@ -404,7 +491,7 @@ export default function Page() {
               }}
             >
               <CircularProgress />
-            </Box> : ''}</div>
+            </Box> <div>Scroll down for more data...</div> </>: ''}</div>
           {/* {room_calendar.isLoading && (
             <Box
               sx={{
