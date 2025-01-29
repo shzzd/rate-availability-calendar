@@ -201,7 +201,7 @@ Before optimization:
 After optimization:
 ![App Screenshot](./src//assets/2.png)
 
-Lighthouse analysis:
+Lighthouse report:
 ![App Screenshot](./src//assets/3.png)
 
 ## Instructions for future developers
