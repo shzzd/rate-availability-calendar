@@ -58,11 +58,7 @@ export default function useRoomRateAvailabilityCalendar(params: IParams) {
     getNextPageParam: (lastpage) => {
       // Check if there is a next cursor to get next page data
       if(lastpage.data.nextCursor){
-        return lastpage.data.nextCursor
-      }
-      else{
-        undefined
-      }
+        return lastpage.data.nextCursor ?? undefined
     },
     staleTime: 2 * 60 * 1000, // Keep data fresh for 2 minutes
   });
@@ -134,13 +130,15 @@ const handleDatesScroll = useCallback((params: GridOnScrollProps) => {
     if (calenderMonthsRef.current) {
       calenderMonthsRef.current.scrollTo(params.scrollLeft);
     }
-  }, []);
+  }, [InventoryRefs]);
 
   useEffect(() => {
+    const container = mainGridContainerRef.current; // Store ref in a variable
+
     const onScroll = () => {
-      if (mainGridContainerRef.current) {
+      if (container) {
         handleDatesScroll({
-          scrollLeft: mainGridContainerRef.current.scrollLeft || 0,
+          scrollLeft: container.scrollLeft || 0,
           scrollTop: 0, // Default value since it's not used
           horizontalScrollDirection: "forward", // Arbitrary value
           verticalScrollDirection: "forward", // Arbitrary value
@@ -150,12 +148,12 @@ const handleDatesScroll = useCallback((params: GridOnScrollProps) => {
     };
     
   
-    if (mainGridContainerRef.current) {
-      mainGridContainerRef.current.addEventListener("scroll", onScroll);
+    if (container) {
+      container.addEventListener("scroll", onScroll);
     }
     
     return () => {
-      mainGridContainerRef.current?.removeEventListener("scroll", onScroll);
+      container?.removeEventListener("scroll", onScroll);
     };
   }, [handleDatesScroll]);
 

@@ -89,13 +89,15 @@ export default function Page() {
     if (calenderMonthsRef.current) {
       calenderMonthsRef.current.scrollTo(params.scrollLeft);
     }
-  }, []);
+  }, [InventoryRefs]);
   
   useEffect(() => {
+    const container = mainGridContainerRef.current; // Store ref in a variable
+
     const onScroll = () => {
-      if (mainGridContainerRef.current) {
+      if (container) {
         handleDatesScroll({
-          scrollLeft: mainGridContainerRef.current.scrollLeft || 0,
+          scrollLeft: container.scrollLeft || 0,
           scrollTop: 0, // Default value since it's not used
           horizontalScrollDirection: "forward", // Arbitrary value
           verticalScrollDirection: "forward", // Arbitrary value
@@ -105,12 +107,12 @@ export default function Page() {
     };
     
   
-    if (mainGridContainerRef.current) {
-      mainGridContainerRef.current.addEventListener("scroll", onScroll);
+    if (container) {
+      container.addEventListener("scroll", onScroll);
     }
     
     return () => {
-      mainGridContainerRef.current?.removeEventListener("scroll", onScroll);
+      container?.removeEventListener("scroll", onScroll);
     };
   }, [handleDatesScroll]);
 
@@ -146,13 +148,15 @@ export default function Page() {
     if (calenderDatesRef.current) {
       calenderDatesRef.current.scrollTo({ scrollLeft: params.scrollLeft });
     }
-  }, []);
+  }, [InventoryRefs]);
   
   useEffect(() => {
+    const container = mainGridContainerRef.current; // Store ref in a variable
+    
     const onScroll = () => {
-      if (mainGridContainerRef.current) {
+      if (container) {
         handleCalenderScroll({
-          scrollLeft: mainGridContainerRef.current.scrollLeft || 0,
+          scrollLeft: container.scrollLeft || 0,
           scrollTop: 0, // Default value since it's not used
           horizontalScrollDirection: "forward", // Arbitrary value
           verticalScrollDirection: "forward", // Arbitrary value
@@ -161,12 +165,12 @@ export default function Page() {
       }
     };
   
-    if (mainGridContainerRef.current) {
-      mainGridContainerRef.current.addEventListener("scroll", onScroll);
+    if (container) {
+      container.addEventListener("scroll", onScroll);
     }
     
     return () => {
-      mainGridContainerRef.current?.removeEventListener("scroll", onScroll);
+      container?.removeEventListener("scroll", onScroll);
     };
   }, [handleCalenderScroll]);
 
