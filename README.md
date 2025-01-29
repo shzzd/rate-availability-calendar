@@ -11,19 +11,207 @@ This project implements an optimized **infinite scrolling calendar** using **Rea
 - Fetches new data as the user scrolls down.  
 
 ✅ **Optimized Scroll Behavior**  
-- Uses `requestAnimationFrame` for smooth rendering.  
-- Throttles scroll events using `lodash/throttle` to prevent excessive API calls.  
+- Throttles scroll events using `lodash/throttle` to prevent excessive API calls. 
+- Uses `requestAnimationFrame` for smooth rendering. 
 
-✅ **Virtualized Rendering**  
-- Implements `react-window` to render only visible items, improving performance.  
-
-✅ **Caching and Performance Improvements**  
-- Caches API responses using React Query to prevent redundant requests.  
+✅ **Performance Improvements**  
 - Uses `staleTime` to reduce unnecessary re-fetching. 
 
 ---
 
-## 🔧 Installation and Setup  
+### </> Implemented Code
+
+✅ **Infinite Scrolling Implementation**  
+- The infinite scrolling functionality is implemented using React Query’s useInfiniteQuery in useRoomRateAvailabilityCalendar.ts.
+
+🔹 Key Changes in useRoomRateAvailabilityCalendar.ts
+
+```json
+
+// Custom hook to fetch room rate availability calendar data
+export default function useRoomRateAvailabilityCalendar(params: IParams) {
+
+  const fetchData = async ({pageParam = 0}) => {
+    // Construct the URL with query parameters
+  const url = new URL(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/property/${params.property_id}/rate-calendar/assessment`
+  );
+
+    url.search = new URLSearchParams({
+      start_date: params.start_date,
+      end_date: params.end_date,
+      cursor: pageParam.toString(), // for infinite scroll
+      fields: "id,name,rate", // Fetch only necessary fields
+    }).toString();
+
+    return await Fetch<IResponse>({
+      method: "GET",
+      url, // Fetch data from the API
+    })
+  }
+
+  // Use React Query's useInfiniteQuery hook to fetch data
+  return useInfiniteQuery({
+    queryKey: ["property_room_calendar", params], // Unique query key
+    queryFn: fetchData,
+    initialPageParam: 0,
+    getNextPageParam: (lastpage) => {
+      // Check if there is a next cursor to get next page data
+      if(lastpage.data.nextCursor){
+        return lastpage.data.nextCursor
+      }
+      else{
+        undefined
+      }
+    },
+    staleTime: 2 * 60 * 1000, // Keep data fresh for 2 minutes
+  });
+}
+
+```
+
+**How it works?**
+
+🔹 The API is called with a cursor parameter to fetch the next page of data.
+
+🔹 getNextPageParam ensures pagination continues until no more data is available.
+
+🔹 StaleTime prevent unnecessary re-fetching.
+
+✅ **Change the Scroll Trigger Point**
+
+- By default, data loads when reaching the bottom. Adjust the threshold in useInView to fetch earlier.
+
+🔹 Added in page.tsx
+
+```json
+
+  const { ref: loadMoreRef, inView } = useInView({
+  threshold: 1, // Fetch when user scrolls 100% into the last item
+});
+
+```
+
+**Why using?**
+
+🔹 Checks if scrolls down at bottom in a given ratio to call for fetching more data
+
+
+✅ **Optimized Scroll Behavior**
+
+- Used lodash/throttle to limit scroll event calls.
+- Used requestAnimationFrame for smooth rendering.
+
+🔹 lodash/throttle in page.tsx
+
+```json
+
+  const handleFetchMore = useCallback(
+    throttle(() => {
+      // if there is next page then fetch the next page
+      if (room_calendar.hasNextPage) {
+        room_calendar.fetchNextPage();
+      }
+    }, 500), // Runs at most every 500ms
+    [room_calendar.hasNextPage, room_calendar.fetchNextPage]
+  );
+
+```
+
+🔹 requestAnimationFrame in page.tsx
+
+```json
+
+const handleDatesScroll = useCallback((params: GridOnScrollProps) => {
+    requestAnimationFrame(() => {
+      InventoryRefs.current.forEach((ref) => {
+        if (ref.current) {
+          ref.current.scrollTo({ scrollLeft: params.scrollLeft });
+        }
+      });
+    });
+  
+    if (calenderMonthsRef.current) {
+      calenderMonthsRef.current.scrollTo(params.scrollLeft);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (mainGridContainerRef.current) {
+        handleDatesScroll({
+          scrollLeft: mainGridContainerRef.current.scrollLeft || 0,
+          scrollTop: 0, // Default value since it's not used
+          horizontalScrollDirection: "forward", // Arbitrary value
+          verticalScrollDirection: "forward", // Arbitrary value
+          scrollUpdateWasRequested: false, // Assumes scroll is user-triggered
+        });
+      }
+    };
+    
+  
+    if (mainGridContainerRef.current) {
+      mainGridContainerRef.current.addEventListener("scroll", onScroll);
+    }
+    
+    return () => {
+      mainGridContainerRef.current?.removeEventListener("scroll", onScroll);
+    };
+  }, [handleDatesScroll]);
+
+```
+
+**Why using?**
+
+🔹 Prevents excessive re-renders and API calls when scrolling.
+
+## Common Issues and Debugging
+
+**Infinite Scroll Not Working?**
+
+✔ Check if nextCursor is returning properly in the API response.
+
+✔ Ensure getNextPageParam is correctly implemented.
+
+✔ Verify that useInView is correctly detecting scroll position.
+
+**Scrolling Feels Laggy?**
+
+✔ Use requestAnimationFrame to optimize rendering.
+
+✔ Throttle scroll events using lodash/throttle.
+
+**API Requests Firing Too Often?**
+
+✔ Set staleTime to avoid unnecessary re-fetching
+
+```json
+staleTime: 2 * 60 * 1000, // Data remains fresh for 2 minutes
+```
+
+## Final Validation Checklist
+
+✔ Tested on different screen sizes (Mobile, Tablet, Desktop).
+
+✔ Used Chrome DevTools to analyze scroll performance.
+
+Before optimization:
+![App Screenshot](./src//assets/1.png)
+
+After optimization:
+![App Screenshot](./src//assets/2.png)
+
+Lighthouse analysis:
+![App Screenshot](./src//assets/3.png)
+
+## Instructions for future developers
+
+- Adding error handling UI.
+- Implementing server-side caching for API responses.
+- Supporting lazy loading for additional performance gains.
+
+
+
 
 ## Overview
 

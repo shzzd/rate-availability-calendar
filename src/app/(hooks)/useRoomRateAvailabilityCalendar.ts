@@ -82,7 +82,7 @@ export default function useRoomRateAvailabilityCalendar(params: IParams) {
     queryFn: fetchData,
     initialPageParam: 0,
     getNextPageParam: (lastpage) => {
-      // Check if there is a next cursor to get next page data upto 9
+      // Check if there is a next cursor to get next page data
       if(lastpage.data.nextCursor){
         return lastpage.data.nextCursor
       }
