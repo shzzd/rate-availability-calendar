@@ -239,7 +239,6 @@ export default function Page() {
       : watchedDateRange[0]!.add(2, "month")
     ).format("YYYY-MM-DD"),
   });
-  console.log(room_calendar?.data)
 
   // take ref and inview to check if scrolls down at bottom
   const { ref: loadMoreRef, inView } = useInView({
