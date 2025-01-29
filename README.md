@@ -1,5 +1,30 @@
 # Project Documentation
 
+This project implements an optimized **infinite scrolling calendar** using **React Query’s `useInfiniteQuery`** and **React Window** for virtualization. It efficiently fetches and displays room rate availability data while ensuring smooth scrolling behavior.  
+
+---
+
+## 🚀 Features Implemented  
+
+✅ **Infinite Scrolling**  
+- Uses `useInfiniteQuery` with a `cursor` parameter to fetch paginated data dynamically.  
+- Fetches new data as the user scrolls down.  
+
+✅ **Optimized Scroll Behavior**  
+- Uses `requestAnimationFrame` for smooth rendering.  
+- Throttles scroll events using `lodash/throttle` to prevent excessive API calls.  
+
+✅ **Virtualized Rendering**  
+- Implements `react-window` to render only visible items, improving performance.  
+
+✅ **Caching and Performance Improvements**  
+- Caches API responses using React Query to prevent redundant requests.  
+- Uses `staleTime` to reduce unnecessary re-fetching. 
+
+---
+
+## 🔧 Installation and Setup  
+
 ## Overview
 
 This project is part of the Grit System Technical Assessment for Front-End Engineers. The main objective is to enhance the calendar component by implementing infinite scrolling using a cursor query parameter in the `useRoomRateAvailabilityCalendar` query. Additionally, the candidate will optimize the horizontal scroll behavior of the calendar to ensure smooth and responsive navigation.
