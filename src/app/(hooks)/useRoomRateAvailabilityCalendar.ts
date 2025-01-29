@@ -1,6 +1,6 @@
 // Import necessary modules and types
 import Fetch from "@/utils/Fetch";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
 
 // ToDo: Add infinite query support
@@ -84,10 +84,7 @@ export default function useRoomRateAvailabilityCalendar(params: IParams) {
     getNextPageParam: (lastpage) => {
       // Check if there is a next cursor to get next page data
       if(lastpage.data.nextCursor){
-        return lastpage.data.nextCursor
-      }
-      else{
-        undefined
+        return lastpage.data.nextCursor ?? undefined
       }
     },
     staleTime: 2 * 60 * 1000, // Keep data fresh for 2 minutes
